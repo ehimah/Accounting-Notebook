@@ -19,7 +19,12 @@ const checkTransaction = (transaction) => {
   }
 };
 
-const getBalance = () => Promise.resolve(accountBalance);
+const getBalance = () => {
+  if (mutex.isLocked()) {
+    return mutex.runExclusive(() => accountBalance);
+  }
+  return Promise.resolve(accountBalance);
+};
 
 const updateBalance = async (transaction) => {
   const release = await mutex.acquire();
