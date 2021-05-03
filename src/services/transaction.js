@@ -26,10 +26,17 @@ const createTransaction = async (transactionInput) => {
     effectiveDate: new Date().toUTCString(),
   };
 
-  transactionsStore.set(transaction.id, transaction);
-  await accountService.updateBalance(transaction);
+  try {
+    transactionsStore.set(transaction.id, transaction);
+    await accountService.updateBalance(transaction);
 
-  return Promise.resolve(transaction);
+    return Promise.resolve(transaction);
+  } catch (error) {
+    // rollback if created
+    if (transactionsStore.has(transaction.id))
+      transactionsStore.delete(transaction.id);
+    throw error;
+  }
 };
 
 module.exports = {
