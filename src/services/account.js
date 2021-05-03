@@ -1,6 +1,8 @@
 const httpStatus = require("http-status");
+const { Mutex } = require("async-mutex");
 const ApiError = require("../utils/ApiError");
-const logger = require("../utils/logger");
+
+const mutex = new Mutex();
 
 let accountBalance = 0;
 
@@ -9,7 +11,6 @@ const calculateEffectiveAmount = ({ amount, type }) =>
 
 const checkTransaction = (transaction) => {
   const effectiveAmount = calculateEffectiveAmount(transaction);
-  logger.log(transaction, effectiveAmount);
   if (effectiveAmount + accountBalance < 0) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -18,12 +19,19 @@ const checkTransaction = (transaction) => {
   }
 };
 
-const getBalance = () => Promise.resolve(accountBalance);
+const getBalance = () => {
+  if (mutex.isLocked)
+  Promise.resolve(accountBalance)};
 
 const updateBalance = async (transaction) => {
-  checkTransaction(transaction);
-  const newBalance = accountBalance + calculateEffectiveAmount(transaction);
-  accountBalance = newBalance;
+  const release = await mutex.acquire();
+  try {
+    checkTransaction(transaction);
+    const newBalance = accountBalance + calculateEffectiveAmount(transaction);
+    accountBalance = newBalance;
+  } finally {
+    release();
+  }
 };
 
 module.exports = {
