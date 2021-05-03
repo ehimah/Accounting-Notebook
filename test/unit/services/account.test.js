@@ -1,4 +1,4 @@
-const { accountService } = require("../../src/services");
+const { accountService } = require("../../../src/services");
 
 describe("account service", () => {
   test("should get default balance", async () => {
