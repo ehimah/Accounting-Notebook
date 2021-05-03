@@ -4,7 +4,8 @@ const { catchAsync } = require("../utils/error");
 const { transactionService } = require("../services");
 
 const createTransactionHandler = catchAsync(async (req, res) => {
-  res.status(httpStatus.CREATED).send({});
+  const transaction = await transactionService.createTransaction(req.body);
+  res.status(httpStatus.CREATED).send(transaction);
 });
 
 const getTransactionHandler = catchAsync(async (req, res) => {

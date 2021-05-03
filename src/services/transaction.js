@@ -1,5 +1,7 @@
 const httpStatus = require("http-status");
+const { v4: uuidv4 } = require("uuid");
 const ApiError = require("../utils/ApiError");
+const accountService = require("./account");
 
 const transactionsStore = new Map();
 
@@ -15,7 +17,23 @@ const getTransactions = () => {
   return Promise.resolve(values);
 };
 
+const createTransaction = async (transactionInput) => {
+  const { amount, type } = transactionInput;
+  const transaction = {
+    id: uuidv4(),
+    amount,
+    type,
+    effectiveDate: new Date().toUTCString(),
+  };
+
+  transactionsStore.set(transaction.id, transaction);
+  await accountService.updateBalance(transaction);
+
+  return Promise.resolve(transaction);
+};
+
 module.exports = {
   getTransaction,
   getTransactions,
+  createTransaction,
 };
